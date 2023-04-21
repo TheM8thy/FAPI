@@ -1,4 +1,4 @@
-# Fuzz API (FAPI) - A fuzzer for API's
+# FAPI - API endpoint fuzzer 
 **Developed by:** arcan3, TheM8thy
 **Version**: 0.1
 **Last updated:** 17/04/2023
