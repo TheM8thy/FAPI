@@ -13,21 +13,26 @@ FAPI is an API endpoint fuzzer, once a wordlist has been selected it'll send a r
 
 ### Help Output
 ```
-usage: fapi2.py [-h] -u <example url> [<example url> ...] -w <wordlist> -m <method> [-dl]
-                [-ms <string> [<string> ...]] [-v] (-t <threads> | -mp <processes>) [--version]
+usage: fapi.py [-h] -u <example url> [<example url> ...] -w <wordlist> -m <method> [-dl]
+               [-ms <string> [<string> ...]] [-v] [-k] [--version]
 
 options:
   -h, --help                                                    Display the help options.
   -u <example url> [<example url> ...], --url <example url> [<example url> ...]
-                                                                Specify the target url after the -u flag.
-  -w <wordlist>, --wordlist <wordlist>                          Specify your chosen wordlist after the -w flag.
-  -m <method>, --method <method>                                Specify the desired request methods, accepted
-                                                                methods are get,post,put,delete or all.
-  -dl , --default_testing_length                                Specify the testing length thats tested against.
+                                                                Specify the target url after the -u
+                                                                flag.
+  -w <wordlist>, --wordlist <wordlist>                          Specify your chosen wordlist after the
+                                                                -w flag.
+  -m <method>, --method <method>                                Specify the desired request methods,
+                                                                accepted methods are
+                                                                get,post,put,delete or all.
+  -dl , --default_testing_length                                Specify the testing length thats tested
+                                                                against.
   -ms <string> [<string> ...], --match_string <string> [<string> ...]
-                                                                Match a specific string within the response text.
+                                                                Match a specific string within the
+                                                                response text.
   -v, --verbose                                                 Verbose mode
-  -t <threads>, --threading <threads>                           Specify number of threads to use.
-  -mp <processes>, --multiprocessing <processes>                Specify number of processes to use.
-  --version                                                     Show fapi2.py version number
+  -k, --ignore_certificates                                     Ignore SSL certificate verification.
+  --version                                                     Show fapi.py version number
+
 ```
