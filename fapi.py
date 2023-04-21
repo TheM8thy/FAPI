@@ -5,7 +5,7 @@ class ValidateMethodsAction(argparse.Action):
         
     def __call__(self, parser, namespace, values, option_string=None):
         methods = list(dict.fromkeys(values[0].split(',')))
-        if methods != 'all':
+        if methods[0] != 'all':
             for method in methods:
                 if method.lower() not in ['get','post','put','delete']:
                     parser.error(f"argument -m/--method: invalid choice(s): '{methods}' (choose from 'get', 'post', 'put', 'delete' or choose 'all')")
@@ -15,62 +15,92 @@ def error(message):
     print(message)
     exit()
 
-def do_get(url, default_testing_length, verbose):
-    new_get_request = requests.get(url)
+def do_get(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
+    new_get_request = requests.get(url, verify=ignore_ssl_verification)
     get_response = new_get_request.text
-    if len(get_response) > default_testing_length:
-        print(f"GET - {str(len(get_response))} - {url} ")
+
+    if match_string != None:
+        for string in match_string:
+            if string in get_response:
+                print(f"[+] GET - \"{str(string)}\" detected: {url}")
+
+    if len(get_response) != default_testing_length:
+        print(f"[+] GET - Different response length: {str(len(get_response))} - {url} ")
     if verbose:
-        print(str(len(get_response)) + "       " + url + " - GET")
+        print("[VERBOSE] GET " + str(len(get_response)) + "       " + url)
     pass
 
-def do_post(url, default_testing_length, verbose):
-    new_post_request = requests.post(url, data="")
+def do_post(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
+    new_post_request = requests.post(url, data="", verify=ignore_ssl_verification)
     post_response = new_post_request.text
-    if len(post_response) > default_testing_length:
-        print(f"POST - {str(len(post_response))} - {url}")
+
+    if match_string != None:
+        for string in match_string:
+            if string in post_response:
+                print(f"[+] POST - \"{str(string)}\" detected: {url}")
+
+    if len(post_response) != default_testing_length:
+        print(f"[+] POST - Different response length: {str(len(post_response))} - {url} ")
     if verbose:
-        print(str(len(post_response)) + "       " + url + " - POST")
+        print("[VERBOSE] POST " + str(len(post_response)) + "       " + url)
     pass
 
-def do_put(url, default_testing_length, verbose):
-    new_put_request = requests.put(url, data="")
+def do_put(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
+    new_put_request = requests.put(url, data="", verify=ignore_ssl_verification)
     put_response = new_put_request.text
-    if len(put_response) > default_testing_length:
-        print(f"PUT - {str(len(put_response))} - {url}")
-    if verbose:
-        print(str(len(put_response)) + "       " + url + " - PUT")
 
-def do_delete(url, default_testing_length, verbose):
-    new_delete_request = requests.delete(url)
+    if match_string != None:
+        for string in match_string:
+            if string in put_response:
+                print(f"[+] PUT - \"{str(string)}\" detected: {url}")
+
+    if len(put_response) != default_testing_length:
+        print(f"[+] PUT - Different response length: {str(len(put_response))} - {url} ")
+    if verbose:
+        print("[VERBOSE] PUT " + str(len(put_response)) + "       " + url)
+
+def do_delete(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
+    new_delete_request = requests.delete(url, verify=ignore_ssl_verification)
     delete_response = new_delete_request.text
-    if len(delete_response) > default_testing_length:
-        print(f"DELETE - {str(len(delete_response))} - {url}")
-    if verbose:
-        print(str(len(delete_response)) + "       " + url + " - DELETE")
 
-def prepare_request(methods, url, default_testing_length, verbose):
+    if match_string != None:
+        for string in match_string:
+            if string in delete_response:
+                print(f"[+] DELETE - \"{str(string)}\" detected: {url}")
+
+    if len(delete_response) != default_testing_length:
+        print(f"[+] DELETE - Different response length: {str(len(delete_response))} - {url} ")
+    if verbose:
+        print("[VERBOSE] DELETE " + str(len(delete_response)) + "       " + url)
+
+def do_all(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
+    do_get(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+    do_delete(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+    do_post(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+    do_put(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+
+def prepare_request(methods, url, default_testing_length, verbose, ignore_ssl_verification, match_string):
 
     for method in methods:
         match method.lower():
             case 'get':
-                do_get(url, default_testing_length, verbose)
+                do_get(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
             case 'post':
-                do_post(url, default_testing_length, verbose)
+                do_post(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
             case 'put':
-                do_put(url, default_testing_length, verbose)
+                do_put(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
             case 'delete':
-                do_delete(url, default_testing_length, verbose)
+                do_delete(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
             case 'all':
-                do_all()
+                do_all(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
             case _:
                 error(f"Fatal error, Invalid request method specified '{method}'")
 
 def banner():
     print("""_____________________________________________________________________
-Fuzz API (FAPI) v0.1
+FAPI - API endpoint fuzzer v0.1
 Developed by: arcan3, TheM8thy
-Last updated: 17/04/2023
+Last updated: 21/04/2023
 _____________________________________________________________________
 """)
 
@@ -86,9 +116,10 @@ def fapi():
     parser.add_argument('-dl', '--default_testing_length', metavar='', type=int, help='Specify the testing length thats tested against.', default=0, nargs=1)
     parser.add_argument('-ms', '--match_string', metavar='<string>', type=str, help='Match a specific string within the response text.', nargs='+')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-t', '--threading', metavar='<threads>', type=int, help='Specify number of threads to use.', nargs=1)
-    group.add_argument('-mp', '--multiprocessing', metavar='<processes>', type=int, help='Specify number of processes to use.', nargs=1)
+    parser.add_argument('-k', '--ignore_certificates', action='store_false', help='Ignore SSL certificate verification.')
+    #group = parser.add_mutually_exclusive_group(required=True)
+    #group.add_argument('-t', '--threading', metavar='<threads>', type=int, help='Specify number of threads to use.', nargs=1)
+    #group.add_argument('-mp', '--multiprocessing', metavar='<processes>', type=int, help='Specify number of processes to use.', nargs=1)
     parser.add_argument('--version', action='version', help='Show %(prog)s version number', version='%(prog)s 0.1')
     parser._actions[0].help='Display the help options.'
     args = parser.parse_args()
@@ -96,6 +127,7 @@ def fapi():
     wordlist = args.wordlist[0]
     methods : list = args.method
     default_testing_length : int = args.default_testing_length[0] if type(args.default_testing_length) is list else args.default_testing_length
+    ignore_ssl_verification = args.ignore_certificates
     match_string : list = args.match_string
     verbose : bool = args.verbose
     
@@ -109,13 +141,15 @@ def fapi():
             print(f"Matching String: {string}")
 
     endpoints = wordlist.readlines()
- 
+
     if args.verbose:
-        print("Length - URL")
+        print("Length - URL\n")
+    else:
+        print("\n")
 
     for url in urls:
         for endpoint in [x for x in endpoints if x[0].strip() not in ['#','','/']]:
             request_url = f"{url}/{endpoint.strip()}"
-            prepare_request(methods, request_url, default_testing_length, verbose)
+            prepare_request(methods, request_url, default_testing_length, verbose, ignore_ssl_verification, match_string)
 
 fapi()
