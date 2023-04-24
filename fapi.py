@@ -15,86 +15,38 @@ def error(message):
     print(message)
     exit()
 
-def do_get(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
-    new_get_request = requests.get(url, verify=ignore_ssl_verification)
-    get_response = new_get_request.text
-
+def process_response(request, match_string, method, default_testing_length, verbose, url):
+    response = request.text
     if match_string != None:
         for string in match_string:
-            if string in get_response:
-                print(f"[+] GET - \"{str(string)}\" detected: {url}")
+            if string in response:
+                print(f"[+] {method} - \"{str(string)}\" detected: {url}")
 
-    if len(get_response) != default_testing_length:
-        print(f"[+] GET - Different response length: {str(len(get_response))} - {url} ")
+    if len(response) != default_testing_length:
+        print(f"[+] {method} - Different response length: {str(len(response))} - {url} ")
     if verbose:
-        print("[VERBOSE] GET " + str(len(get_response)) + "       " + url)
+        print(f"[VERBOSE] {method} {str(len(response))}       {url}")
     pass
-
-def do_post(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
-    new_post_request = requests.post(url, data="", verify=ignore_ssl_verification)
-    post_response = new_post_request.text
-
-    if match_string != None:
-        for string in match_string:
-            if string in post_response:
-                print(f"[+] POST - \"{str(string)}\" detected: {url}")
-
-    if len(post_response) != default_testing_length:
-        print(f"[+] POST - Different response length: {str(len(post_response))} - {url} ")
-    if verbose:
-        print("[VERBOSE] POST " + str(len(post_response)) + "       " + url)
-    pass
-
-def do_put(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
-    new_put_request = requests.put(url, data="", verify=ignore_ssl_verification)
-    put_response = new_put_request.text
-
-    if match_string != None:
-        for string in match_string:
-            if string in put_response:
-                print(f"[+] PUT - \"{str(string)}\" detected: {url}")
-
-    if len(put_response) != default_testing_length:
-        print(f"[+] PUT - Different response length: {str(len(put_response))} - {url} ")
-    if verbose:
-        print("[VERBOSE] PUT " + str(len(put_response)) + "       " + url)
-
-def do_delete(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
-    new_delete_request = requests.delete(url, verify=ignore_ssl_verification)
-    delete_response = new_delete_request.text
-
-    if match_string != None:
-        for string in match_string:
-            if string in delete_response:
-                print(f"[+] DELETE - \"{str(string)}\" detected: {url}")
-
-    if len(delete_response) != default_testing_length:
-        print(f"[+] DELETE - Different response length: {str(len(delete_response))} - {url} ")
-    if verbose:
-        print("[VERBOSE] DELETE " + str(len(delete_response)) + "       " + url)
-
-def do_all(url, default_testing_length, verbose, ignore_ssl_verification, match_string):
-    do_get(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
-    do_delete(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
-    do_post(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
-    do_put(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
 
 def prepare_request(methods, url, default_testing_length, verbose, ignore_ssl_verification, match_string):
 
     for method in methods:
         match method.lower():
             case 'get':
-                do_get(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+                request = requests.get(url, verify=ignore_ssl_verification)
             case 'post':
-                do_post(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+                request = requests.post(url, data="", verify=ignore_ssl_verification)
             case 'put':
-                do_put(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+                request = requests.put(url, data="", verify=ignore_ssl_verification)
             case 'delete':
-                do_delete(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+                request = requests.delete(url, verify=ignore_ssl_verification)
             case 'all':
-                do_all(url, default_testing_length, verbose, ignore_ssl_verification, match_string)
+                print("All not yet implemented.")
             case _:
                 error(f"Fatal error, Invalid request method specified '{method}'")
+
+        process_response(request, match_string, method.upper(), default_testing_length, verbose, url)
+
 
 def banner():
     print("""_____________________________________________________________________
@@ -112,7 +64,7 @@ def fapi():
     parser = argparse.ArgumentParser(formatter_class=formatter)
     parser.add_argument('-u', '--url', metavar='<example url>', type=str, help='Specify the target url after the -u flag.', nargs='+', required=True)
     parser.add_argument('-w', '--wordlist', metavar='<wordlist>', type=argparse.FileType('r'), help='Specify your chosen wordlist after the -w flag.', nargs=1, required=True)
-    parser.add_argument('-m', '--method', action=ValidateMethodsAction, metavar='<method>', type=str, help='Specify the desired request methods, accepted methods are get,post,put,delete or all.', nargs=1, required=True)
+    parser.add_argument('-m', '--method', action=ValidateMethodsAction, metavar='<method>', type=str, help='Specify the desired request methods, accepted methods are get,post,put,delete.', nargs=1, required=True)
     parser.add_argument('-dl', '--default_testing_length', metavar='', type=int, help='Specify the testing length thats tested against.', default=0, nargs=1)
     parser.add_argument('-ms', '--match_string', metavar='<string>', type=str, help='Match a specific string within the response text.', nargs='+')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
