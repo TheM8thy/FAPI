@@ -2,7 +2,7 @@ import requests
 import argparse
 
 class ValidateMethodsAction(argparse.Action):
-        
+
     def __call__(self, parser, namespace, values, option_string=None):
         methods = list(dict.fromkeys(values[0].split(',')))
         if methods[0] != 'all':
