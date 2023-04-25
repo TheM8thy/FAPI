@@ -9,46 +9,36 @@ class ValidateMethodsAction(argparse.Action):
             for method in methods:
                 if method.lower() not in ['get','post','put','delete']:
                     parser.error(f"argument -m/--method: invalid choice(s): '{methods}' (choose from 'get', 'post', 'put', 'delete' or choose 'all')")
+        else:
+            methods = ['get', 'post', 'delete', 'put']
         setattr(namespace, self.dest, methods)
 
 def error(message):
     print(message)
     exit()
 
-def process_response(request, match_string, method, default_testing_length, verbose, url):
+def process_response(request, match_string, default_testing_length, verbose):
+
     response = request.text
     if match_string != None:
         for string in match_string:
             if string in response:
-                print(f"[+] {method} - \"{str(string)}\" detected: {url}")
+                print(f"[+] {request.request.method} - \"{str(string)}\" detected: {request.request.url}")
 
     if len(response) != default_testing_length:
-        print(f"[+] {method} - Different response length: {str(len(response))} - {url} ")
+        print(f"[+] {request.request.method} - Different response length: {str(len(response))} - {request.request.url} ")
     if verbose:
-        print(f"[VERBOSE] {method} {str(len(response))}       {url}")
+        print(f"[VERBOSE] {request.request.method} {str(len(response))}       {request.request.url}")
     pass
 
 def prepare_request(methods, url, default_testing_length, verbose, ignore_ssl_verification, match_string):
 
     for method in methods:
-        match method.lower():
-            case 'get':
-                request = requests.get(url, verify=ignore_ssl_verification)
-            case 'post':
-                request = requests.post(url, data="", verify=ignore_ssl_verification)
-            case 'put':
-                request = requests.put(url, data="", verify=ignore_ssl_verification)
-            case 'delete':
-                request = requests.delete(url, verify=ignore_ssl_verification)
-            case 'all':
-                print("All not yet implemented.")
-            case _:
-                error(f"Fatal error, Invalid request method specified '{method}'")
-
-        process_response(request, match_string, method.upper(), default_testing_length, verbose, url)
-
+        request = requests.request(method, url, verify=ignore_ssl_verification)
+        process_response(request, match_string, default_testing_length, verbose)
 
 def banner():
+
     print("""_____________________________________________________________________
 FAPI - API endpoint fuzzer v0.1
 Developed by: arcan3, TheM8thy
@@ -82,7 +72,6 @@ def fapi():
     ignore_ssl_verification = args.ignore_certificates
     match_string : list = args.match_string
     verbose : bool = args.verbose
-    
 
     print(f"URL: {','.join(urls)}")
     print(f"Methods: {','.join([x.upper() for x in methods])}")
