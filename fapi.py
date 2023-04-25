@@ -14,6 +14,7 @@ class ValidateMethodsAction(argparse.Action):
         setattr(namespace, self.dest, methods)
 
 def error(message):
+
     print(message)
     exit()
 
@@ -75,7 +76,6 @@ def fapi():
 
     print(f"URL: {','.join(urls)}")
     print(f"Methods: {','.join([x.upper() for x in methods])}")
-    #print(args)
 
     if match_string:
         for string in match_string:
