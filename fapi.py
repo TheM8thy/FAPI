@@ -1,5 +1,5 @@
-import requests
 import argparse
+import requests
 
 class ValidateMethodsAction(argparse.Action):
 
@@ -21,7 +21,7 @@ def error(message):
 def process_response(request, match_string, default_testing_length, verbose):
 
     response = request.text
-    if match_string != None:
+    if match_string is not None:
         for string in match_string:
             if string in response:
                 print(f"[+] {request.request.method} - \"{str(string)}\" detected: {request.request.url}")
@@ -30,13 +30,16 @@ def process_response(request, match_string, default_testing_length, verbose):
         print(f"[+] {request.request.method} - Different response length: {str(len(response))} - {request.request.url} ")
     if verbose:
         print(f"[VERBOSE] {request.request.method} {str(len(response))}       {request.request.url}")
-    pass
 
 def prepare_request(methods, url, default_testing_length, verbose, ignore_ssl_verification, match_string):
 
     for method in methods:
-        request = requests.request(method, url, verify=ignore_ssl_verification)
-        process_response(request, match_string, default_testing_length, verbose)
+        try:
+            request = requests.request(method, url, verify=ignore_ssl_verification)
+            process_response(request, match_string, default_testing_length, verbose)
+        except requests.ConnectTimeout:
+            if verbose:
+                print(f"[Verbose] {method} - Connection timed out - {url}")
 
 def banner():
 
@@ -69,7 +72,7 @@ def fapi():
     urls : list = args.url
     wordlist = args.wordlist[0]
     methods : list = args.method
-    default_testing_length : int = args.default_testing_length[0] if type(args.default_testing_length) is list else args.default_testing_length
+    default_testing_length : int = args.default_testing_length[0] if isinstance(args.default_testing_length,list) else args.default_testing_length
     ignore_ssl_verification = args.ignore_certificates
     match_string : list = args.match_string
     verbose : bool = args.verbose
