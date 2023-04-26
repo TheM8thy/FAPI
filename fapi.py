@@ -10,7 +10,7 @@ def validatemethod(value):
 
     methods = list(dict.fromkeys(value.split(',')))
     if methods[0] == 'all':
-        return 'get', 'post', 'delete', 'put'
+        return ['get', 'post', 'delete', 'put']
     for method in methods:
         if method.lower() not in ['get','post','put','delete']:
             raise argparse.ArgumentTypeError(f"argument -m/--method: invalid choice(s): '{methods}' (choose from 'get', 'post', 'put', 'delete' or choose 'all')")
